@@ -2,12 +2,16 @@ package perm
 
 import (
 	"errors"
+	"github.com/gorilla/context"
 	"net/http"
 )
 
 var HandlerNotFound error
+var contextKey *int
 
 func init() {
+	i := 0
+	contextKey = &i
 	HandlerNotFound = errors.New("Permission handler not found")
 }
 
@@ -17,6 +21,7 @@ type Mux interface {
 	HandleFunc(perm string, h HandlerFunc)
 	Handle(perm string, h Handler)
 	Allow(r *http.Request, perm string, info ...interface{}) error
+	ServeHTTP(w http.ResponseWriter, r *http.Request)
 }
 
 // NewMux returns a new DefaultMux
@@ -67,4 +72,28 @@ func (p *DefaultMux) Allow(r *http.Request, perm string, info ...interface{}) er
 	// TODO: find relevant permission string by pattern (i.e. `*`)
 
 	return p.defaultH.Allow(r, perm, info...)
+}
+
+// ServeHTTP provide itself to the context
+func (p *DefaultMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	context.Set(r, contextKey, p)
+}
+
+// GetMuxOk
+func GetMuxOk(r *http.Request) (m *DefaultMux, ok bool) {
+
+	// try to get current key
+	cm, ok := context.GetOk(r, contextKey)
+	if !ok {
+		return
+	}
+
+	m, ok = cm.(*DefaultMux)
+	return
+}
+
+// GetMux retrieve permission mux from current gorilla context
+func GetMux(r *http.Request) (m *DefaultMux) {
+	m, _ = GetMuxOk(r)
+	return
 }

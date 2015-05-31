@@ -46,3 +46,22 @@ func TestMuxNotFound(t *testing.T) {
 		t.Errorf("Error is not of expected type. Expecting perm.HandlerNotFound by get %#v", err)
 	}
 }
+
+func TestMuxHttpHandler(t *testing.T) {
+	// make sure mux implements http.Handler
+	// can be used as a middleware
+	var h http.Handler = NewMux()
+	_ = h
+}
+
+func TestMiddleWare(t *testing.T) {
+	// test the middleware operation
+	m1 := NewMux()
+	r := &http.Request{}
+	m1.ServeHTTP(nil, r)
+	m2 := GetMux(r)
+
+	if m1 != m2 {
+		t.Errorf("Middleware got is not Mux")
+	}
+}
