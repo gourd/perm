@@ -25,7 +25,7 @@ type Mux interface {
 }
 
 // NewMux returns a new DefaultMux
-func NewMux() *DefaultMux {
+func NewMux() Mux {
 	var dh HandlerFunc = func(r *http.Request, perm string, info ...interface{}) error {
 		return HandlerNotFound
 	}
@@ -80,7 +80,7 @@ func (p *DefaultMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetMuxOk
-func GetMuxOk(r *http.Request) (m *DefaultMux, ok bool) {
+func GetMuxOk(r *http.Request) (m Mux, ok bool) {
 
 	// try to get current key
 	cm, ok := context.GetOk(r, contextKey)
@@ -93,7 +93,7 @@ func GetMuxOk(r *http.Request) (m *DefaultMux, ok bool) {
 }
 
 // GetMux retrieve permission mux from current gorilla context
-func GetMux(r *http.Request) (m *DefaultMux) {
+func GetMux(r *http.Request) (m Mux) {
 	m, _ = GetMuxOk(r)
 	return
 }
