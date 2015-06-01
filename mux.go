@@ -22,17 +22,16 @@ type Mux interface {
 	Handle(perm string, h Handler)
 	Allow(r *http.Request, perm string, info ...interface{}) error
 	ServeHTTP(w http.ResponseWriter, r *http.Request)
+	Default(err error)
 }
 
 // NewMux returns a new DefaultMux
 func NewMux() Mux {
-	var dh HandlerFunc = func(r *http.Request, perm string, info ...interface{}) error {
-		return HandlerNotFound
-	}
-	return &DefaultMux{
+	m := &DefaultMux{
 		handlers: make(map[string]Handler),
-		defaultH: dh,
 	}
+	m.Default(HandlerNotFound)
+	return m
 }
 
 // DefaultMux route permission request to different
@@ -77,6 +76,16 @@ func (p *DefaultMux) Allow(r *http.Request, perm string, info ...interface{}) er
 // ServeHTTP provide itself to the context
 func (p *DefaultMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	context.Set(r, contextKey, p)
+}
+
+// Default set the default response of Mux
+// if no handler is found. Default HandlerNotFound
+// Set to nil if you want to pass by default
+func (p *DefaultMux) Default(err error) {
+	var h HandlerFunc = func(r *http.Request, perm string, info ...interface{}) error {
+		return err
+	}
+	p.defaultH = h
 }
 
 // GetMuxOk
